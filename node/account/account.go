@@ -312,3 +312,73 @@ func SignatureRSV(signData interface{}) ([32]byte, [32]byte, uint8) {
 	V := uint8(vI + 27)
 	return R, S, V
 }
+
+//签名
+func SignatureTest(priKey, data string) (string, error) {
+	privateKey, err := crypto.HexToECDSA(priKey)
+	if err != nil {
+		return "", err
+	}
+	byteData := []byte(data)
+	hash := crypto.Keccak256Hash(byteData)
+	signature, err := crypto.Sign(hash.Bytes(), privateKey)
+	if err != nil {
+		return "", err
+	}
+	return hexutil.Encode(signature), nil
+}
+
+//验证签名
+func VerifySignatureTest(priKey, originData, signData string) (bool, error) {
+	privateKey, err := crypto.HexToECDSA(priKey)
+	if err != nil {
+		return false, err
+	}
+	pubKey := privateKey.Public()
+	pubKeyECDSA, ok := pubKey.(*ecdsa.PublicKey)
+	if !ok {
+		return false, err
+	}
+	pubKeyBytes := crypto.FromECDSAPub(pubKeyECDSA)
+	data := []byte(originData)
+	hash := crypto.Keccak256Hash(data)
+	signature, err := hexutil.Decode(signData)
+	if err != nil {
+		return false, err
+	}
+	sigPubKey, err := crypto.Ecrecover(hash.Bytes(), signature)
+	if err != nil {
+		return false, err
+	}
+	matches := bytes.Equal(sigPubKey, pubKeyBytes)
+	if !matches {
+		return false, errors.New("公钥验证失败")
+	}
+	sigPubKeyECDSA, err := crypto.SigToPub(hash.Bytes(), signature)
+	if err != nil {
+		return false, errors.New("公钥验证失败")
+	}
+	sigPublicKeyBytes := crypto.FromECDSAPub(sigPubKeyECDSA)
+	matches = bytes.Equal(sigPublicKeyBytes, pubKeyBytes)
+	if !matches {
+		return false, errors.New("公钥验证失败")
+	}
+
+	signatureNoRecoverID := signature[:len(signature)-1] // remove recovery id
+	verified := crypto.VerifySignature(pubKeyBytes, hash.Bytes(), signatureNoRecoverID)
+	return verified, nil
+
+}
+
+//获取签名的地址
+func SignatureAccountTest(originData, sigData string) (string, error) {
+	originByte, _ := hexutil.Decode(originData)
+	hash := crypto.Keccak256Hash(originByte)
+	sigByte := []byte(sigData)
+	sigPubKey, err := crypto.SigToPub(hash.Bytes(), sigByte)
+	if err != nil {
+		return "", err
+	}
+	address := crypto.PubkeyToAddress(*sigPubKey).Hex()
+	return address, nil
+}
