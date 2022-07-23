@@ -2,13 +2,20 @@ package main
 
 import (
 	"fmt"
-	dc "github.com/shopspring/decimal"
-	"math/big"
+	"go-lib/node/account"
 )
 
 func main() {
-	fmt.Println("还没开始就结束了")
-	num, _ := new(big.Int).SetString("10000", 10)
-	returnNum, _ := dc.NewFromBigInt(num, 0).Float64()
-	fmt.Println(returnNum)
+	priKey := "e50bc4b30036a662addecfcb7a9fc4337430f758518f977dc5e354701a697f14"
+	sigData, _ := account.Signature(priKey, "Hello world")
+	addr, err := account.SignatureAccount("Hello world", sigData)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(addr)
+	flag, err := account.VerifySignature(priKey, "Hello world", sigData)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(flag)
 }
