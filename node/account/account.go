@@ -314,7 +314,7 @@ func SignatureRSV(signData interface{}) ([32]byte, [32]byte, uint8) {
 }
 
 //签名
-func SignatureTest(priKey, data string) (string, error) {
+func SignatureNoPack(priKey, data string) (string, error) {
 	privateKey, err := crypto.HexToECDSA(priKey)
 	if err != nil {
 		return "", err
@@ -329,7 +329,7 @@ func SignatureTest(priKey, data string) (string, error) {
 }
 
 //验证签名
-func VerifySignatureTest(priKey, originData, signData string) (bool, error) {
+func VerifySignatureNoPack(priKey, originData, signData string) (bool, error) {
 	privateKey, err := crypto.HexToECDSA(priKey)
 	if err != nil {
 		return false, err
@@ -371,7 +371,7 @@ func VerifySignatureTest(priKey, originData, signData string) (bool, error) {
 }
 
 //获取签名的地址
-func SignatureAccountTest(originData, sigData string) (string, error) {
+func SignatureAccountNoPack(originData, sigData string) (string, error) {
 	originByte, _ := hexutil.Decode(originData)
 	hash := crypto.Keccak256Hash(originByte)
 	sigByte := []byte(sigData)
