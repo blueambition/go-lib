@@ -8,73 +8,67 @@ import (
 	"strings"
 )
 
-var URI, _ = url.Parse("http://127.0.0.1:7890") //本地测试翻墙设置
-
 //Post请求
-func Post(reqUrl string, setProxy bool, header map[string]string, postData string) ([]byte, error) {
+func Post(reqUrl string, proxy string, header map[string]string, data string) ([]byte, int, error) {
 	client := &http.Client{}
-	if setProxy {
+	if proxy != "" {
+		var proxyURI, _ = url.Parse(proxy)
 		client.Transport = &http.Transport{
 			// 设置代理
-			Proxy: http.ProxyURL(URI),
+			Proxy: http.ProxyURL(proxyURI),
 		}
 	}
-	req, err := http.NewRequest("POST", reqUrl, strings.NewReader(postData))
+	req, err := http.NewRequest("POST", reqUrl, strings.NewReader(data))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	for k, v := range header {
 		req.Header.Add(k, v)
 	}
-	for k, v := range header {
-		req.Header.Add(k, v)
-	}
-	//post请求
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, err
+			return nil, resp.StatusCode, err
 		}
-		return body, nil
+		return body, resp.StatusCode, nil
 	}
-
-	return nil, errors.New("请求有误")
+	return nil, resp.StatusCode, errors.New("请求有误")
 }
 
 //Get请求
-func Get(reqUrl string, setProxy bool, header map[string]string) ([]byte, error) {
+func Get(reqUrl, proxy string, header map[string]string) ([]byte, int, error) {
 	client := &http.Client{}
-	if setProxy {
+	if proxy != "" {
+		var proxyURI, _ = url.Parse(proxy)
 		client.Transport = &http.Transport{
 			// 设置代理
-			Proxy: http.ProxyURL(URI),
+			Proxy: http.ProxyURL(proxyURI),
 		}
 	}
 	//提交请求
 	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	for k, v := range header {
 		req.Header.Add(k, v)
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, err
+			return nil, resp.StatusCode, err
 		}
-		return body, nil
+		return body, resp.StatusCode, nil
 	}
-
-	return nil, errors.New("请求有误")
+	return nil, resp.StatusCode, errors.New("请求有误")
 }

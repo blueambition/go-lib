@@ -4,11 +4,16 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"math/rand"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
+
+//范围随机数
+func RangeRand(min, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	randNum := rand.Intn(max-min) + min
+	return randNum
+}
 
 //随机数字码
 func RandNumCode(codeLen int) string {
@@ -57,7 +62,7 @@ func SubStr(str string, begin int, end int) string {
 }
 
 //截断文本
-func ShortTxt(str string, shortLen int) string {
+func Ellipsis(str string, shortLen int) string {
 	runes := []rune(str)
 	if len(runes) > shortLen {
 		runes = runes[:shortLen+1]
@@ -66,98 +71,34 @@ func ShortTxt(str string, shortLen int) string {
 	return string(runes)
 }
 
+//获取MD5
 func GetMd5(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-//去除HTML标签
-func TrimHtml(src string, breakLine bool) string {
-	src = strings.ReplaceAll(src, "&#8211;", "–")
-	src = strings.ReplaceAll(src, "&nbsp;", " ")
-	src = strings.ReplaceAll(src, "&#160;", " ")
-	src = strings.ReplaceAll(src, "&#32;", " ")
-	//将HTML标签全转换成小写
-	re, _ := regexp.Compile("<[\\S\\s]+?>")
-	src = re.ReplaceAllStringFunc(src, strings.ToLower)
-	if breakLine {
-		//替换<p>标签
-		re, _ = regexp.Compile("<p[^<>]+?>|<p />")
-		src = re.ReplaceAllString(src, "\n")
-		//替换<br>标签
-		re, _ = regexp.Compile("<br[^<>]+?>|<br />")
-		src = re.ReplaceAllString(src, "\n")
+//截断文本
+func SecretMix(str string, begin, end int, mark string) string {
+	mix := ""
+	runes := []rune(str)
+	strLen := len(runes)
+	if strLen < end {
+		end = strLen - 1
 	}
-	//去除STYLE
-	re, _ = regexp.Compile("<style[^<>]+?>(.*?)</style>")
-	src = re.ReplaceAllString(src, "")
-	//去除SCRIPT
-	re, _ = regexp.Compile("<script[^<>]+?></script>")
-	src = re.ReplaceAllString(src, "")
-	//去除所有尖括号内的HTML代码，并换成换行符
-	re, _ = regexp.Compile("<[^<>]+?>")
-	src = re.ReplaceAllString(src, "\n")
-	//去除连续的换行符
-	//re, _ = regexp.Compile("\\s+")
-	//src = re.ReplaceAllString(src, " ")
-	re, _ = regexp.Compile("\n+")
-	src = re.ReplaceAllString(src, "\n")
-	//特殊符号
-	re, _ = regexp.Compile("&.+?;")
-	src = re.ReplaceAllString(src, "")
-	return src
-}
-
-//<br> <p>标签转换成换行
-func TagToLine(src string) string {
-	//将HTML标签全转换成小写
-	re, _ := regexp.Compile("<[\\S\\s]+?>")
-	src = re.ReplaceAllStringFunc(src, strings.ToLower)
-	//替换<p>标签
-	re, _ = regexp.Compile("<p[^<>]+?>|<p />")
-	src = re.ReplaceAllString(src, "\n")
-	//替换<br>标签
-	re, _ = regexp.Compile("<br[^<>]+?>|<br />")
-	src = re.ReplaceAllString(src, "\n")
-	return src
-}
-
-//unicode索引位置
-func IndexOf(str, substr string) int {
-	// 子串在字符串的字节位置
-	result := strings.Index(str, substr)
-	if result >= 0 {
-		// 获得子串之前的字符串并转换成[]byte
-		prefix := []byte(str)[0:result]
-		// 将子串之前的字符串转换成[]rune
-		rs := []rune(string(prefix))
-		// 获得子串之前的字符串的长度，便是子串在字符串的字符位置
-		result = len(rs)
+	if strLen > begin {
+		mix = string(runes[0:begin])
+		for k, _ := range runes {
+			if k >= begin && k <= end {
+				mix += mark
+			}
+		}
+		if end < strLen-1 {
+			mix += string(runes[end+1:])
+		}
 	}
-
-	return result
-}
-
-//unicode索引位置
-func LastIndexOf(str, substr string) int {
-	// 子串在字符串的字节位置
-	result := strings.LastIndex(str, substr)
-	if result >= 0 {
-		// 获得子串之前的字符串并转换成[]byte
-		prefix := []byte(str)[0:result]
-		// 将子串之前的字符串转换成[]rune
-		rs := []rune(string(prefix))
-		// 获得子串之前的字符串的长度，便是子串在字符串的字符位置
-		result = len(rs)
+	if mix == "" {
+		mix = str
 	}
-
-	return result
-}
-
-//去除换行
-func TrimLine(html string) string {
-	html = strings.Replace(html, "\n", "", -1)
-	html = strings.Replace(html, "\t", "", -1)
-	return html
+	return mix
 }
