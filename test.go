@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"encoding/json"
@@ -31,7 +31,7 @@ type EIP712 struct {
 	} `json:"types"`
 }
 
-func main() {
+func ValidEIP712() {
 	originData := EIP712{
 		Domain: EIP712Domain{56, "Butterfly", "v1.0"},
 		Message: struct {
