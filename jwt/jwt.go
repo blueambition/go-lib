@@ -7,14 +7,13 @@ import (
 )
 
 //生成Token
-func Make(id, expire int64) string {
-	signKey := []byte("aaaAAA111~!#$%^&*")
+func Make(id, expire int64, iss string, signKey []byte) string {
 	// Create the Claims
 	claims := &jwt.MapClaims{
 		"user_id": id,
 		"nbf":     time.Now().Unix(),
 		"exp":     time.Now().Unix() + expire,
-		"iss":     "ONE",
+		"iss":     iss,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -26,13 +25,13 @@ func Make(id, expire int64) string {
 }
 
 // 校验token是否有效
-func Check(tokenStr string) (bool, int64) {
+func Check(tokenStr string, signKey []byte) (bool, int64) {
 	if tokenStr == "" {
 		return false, 0
 	}
 	tokenStr = strings.Replace(tokenStr, "Bearer ", "", 1)
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte("aaaAAA111~!#$%^&*"), nil
+		return signKey, nil
 	})
 	if err != nil {
 		return false, 0

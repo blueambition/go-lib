@@ -48,7 +48,7 @@ func main() {
 		{"content", "string"},
 	}
 	jsonData, _ := json.Marshal(originData)
-	signData, _ := account.SignatureNoPack("", string(jsonData))
+	signData, _ := account.Signature("", string(jsonData))
 	fmt.Println(signData)
 	var typedData apitypes.TypedData
 	if err := json.Unmarshal([]byte(jsonData), &typedData); err != nil {
