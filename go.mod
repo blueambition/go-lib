@@ -1,4 +1,4 @@
-module go-lib
+module github.com/blueambition/go-lib
 
 go 1.18
 
