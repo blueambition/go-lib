@@ -3,17 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/blueambition/go-lib/node/account"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/storyicon/sigverify"
 )
 
 type EIP712Domain struct {
-	ChainId uint   `json:"chainId"`
-	Name    string `json:"name"`
-	Version string `json:"version"`
+	ChainId           string `json:"chainId"`
+	Name              string `json:"name"`
+	Version           string `json:"version"`
+	VerifyingContract string `json:"verifyingContract"`
 }
 
 type EIP712Property struct {
@@ -33,7 +32,7 @@ type EIP712 struct {
 
 func ValidEIP712() {
 	originData := EIP712{
-		Domain: EIP712Domain{56, "Butterfly", "v1.0"},
+		Domain: EIP712Domain{"56", "Butterfly", "v1.0", ""},
 		Message: struct {
 			Content string `json:"content"`
 		}{"Bind User"},
@@ -43,21 +42,23 @@ func ValidEIP712() {
 		{"name", "string"},
 		{"version", "string"},
 		{"chainId", "uint256"},
+		{"verifyingContract", "address"},
 	}
 	originData.Types.Primary = []EIP712Property{
 		{"content", "string"},
 	}
 	jsonData, _ := json.Marshal(originData)
-	signData, _ := account.Signature("", string(jsonData))
-	fmt.Println(signData)
+	fmt.Println(jsonData)
+	jsonStr := `{"types":{"EIP712Domain":[{"name":"name","type":"string"},{"name":"version","type":"string"},{"name":"chainId","type":"uint256"}],"Primary":[{"name":"content","type":"string"}]},"domain":{"chainId":"56","name":"Butterfly","version":"v1.0"},"primaryType":"Primary","message":{"content":"Bind User"}}`
+	fmt.Println(jsonStr)
 	var typedData apitypes.TypedData
-	if err := json.Unmarshal([]byte(jsonData), &typedData); err != nil {
+	if err := json.Unmarshal([]byte(jsonStr), &typedData); err != nil {
 		panic(err)
 	}
 	valid, err := sigverify.VerifyTypedDataHexSignatureEx(
-		ethcommon.HexToAddress("0xaC39b311DCEb2A4b2f5d8461c1cdaF756F4F7Ae9"),
+		ethcommon.HexToAddress("0x3D12Bd39bB936a73575ea97dFbf308b08b84e76B"),
 		typedData,
-		"0xee0d9f9e63fa7183bea2ca2e614cf539464a4c120c8dfc1d5ccc367f242a2c5939d7f59ec2ab413b8a9047de5de2f1e5e97da4eba2ef0d6a89136464f992dae11c",
+		"0x5b1a3e3d3f01712ea430333bed3efb70d9f7f6719340bda7f4434260c522f7d72c019ccc40116a3b3c341bb9c5f110683d83874419c101ee1e66c88fe06b4c5c1c",
 	)
 	fmt.Println(valid, err) // true <nil>
 }
